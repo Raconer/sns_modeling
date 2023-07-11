@@ -1,0 +1,14 @@
+server:
+  port: 8080
+logging:
+  level:
+    org.springframework.jdbc.core: TRACE
+spring:
+  sql:
+    init:
+      mode: always
+  datasource:
+    username: root
+    url: jdbc:mysql://${url}?rewriteBatchedStatements=true&characterEncoding=UTF-8&serverTimezone=Asia/Seoul
+    password: ${password}
+    driver-class-name: com.mysql.cj.jdbc.Driver
