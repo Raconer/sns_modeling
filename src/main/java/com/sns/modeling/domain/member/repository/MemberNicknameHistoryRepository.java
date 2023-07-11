@@ -1,12 +1,9 @@
 package com.sns.modeling.domain.member.repository;
 
-import com.sns.modeling.domain.member.entity.Member;
 import com.sns.modeling.domain.member.entity.MemberNicknameHistory;
 import java.sql.ResultSet;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.BeanPropertySqlParameterSource;

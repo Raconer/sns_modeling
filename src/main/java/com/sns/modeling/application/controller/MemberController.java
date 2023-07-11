@@ -1,6 +1,6 @@
-package com.sns.modeling.controller;
+package com.sns.modeling.application.controller;
 
-import com.sns.modeling.domain.member.dto.MemberDTO;
+import com.sns.modeling.domain.member.dto.MemberDto;
 import com.sns.modeling.domain.member.dto.MemberNicknameHistoryDto;
 import com.sns.modeling.domain.member.dto.RegisterMemberCommand;
 import com.sns.modeling.domain.member.service.MemberReadService;
@@ -24,13 +24,13 @@ public class MemberController {
     final private MemberReadService memberReadService;
 
     @PostMapping
-    public MemberDTO create(@RequestBody RegisterMemberCommand command){
+    public MemberDto create(@RequestBody RegisterMemberCommand command){
         var member = this.memberWriteService.create(command);
         return this.memberReadService.toDto(member);
     }
 
     @GetMapping("/{id}")
-    public MemberDTO getMember(@PathVariable Long id){
+    public MemberDto getMember(@PathVariable Long id){
         return this.memberReadService.getMember(id);
     }
 
@@ -40,7 +40,7 @@ public class MemberController {
     }
 
     @PutMapping("/{id}/name")
-    public MemberDTO changeNickname(@PathVariable Long id, @RequestBody String nickname ){
+    public MemberDto changeNickname(@PathVariable Long id, @RequestBody String nickname ){
         this.memberWriteService.changeNickname(id, nickname);
         return this.memberReadService.getMember(id);
     }
