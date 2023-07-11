@@ -1,6 +1,6 @@
 package com.sns.modeling.domain.member.service;
 
-import com.sns.modeling.domain.member.dto.MemberDTO;
+import com.sns.modeling.domain.member.dto.MemberDto;
 import com.sns.modeling.domain.member.dto.MemberNicknameHistoryDto;
 import com.sns.modeling.domain.member.entity.Member;
 import com.sns.modeling.domain.member.entity.MemberNicknameHistory;
@@ -17,9 +17,14 @@ public class MemberReadService {
   final private MemberRepository memberRepository;
   final private MemberNicknameHistoryRepository memberNicknameHistoryRepository;
 
-  public MemberDTO getMember(Long id) {
+  public MemberDto getMember(Long id) {
     var member = this.memberRepository.findById(id).orElseThrow();
     return this.toDto(member);
+  }
+
+  public List<MemberDto> getMembers(List<Long> ids){
+    var members = this.memberRepository.findAllByIdIn(ids);
+    return members.stream().map(this::toDto).toList();
   }
 
   public List<MemberNicknameHistoryDto> getNicknameHistories(Long memberId) {
@@ -27,8 +32,8 @@ public class MemberReadService {
         .map(this::toDto).toList();
   }
 
-  public MemberDTO toDto(Member member) {
-    return new MemberDTO(member.getId(), member.getEmail(), member.getNickname(),
+  public MemberDto toDto(Member member) {
+    return new MemberDto(member.getId(), member.getEmail(), member.getNickname(),
         member.getBirthDay());
   }
 
