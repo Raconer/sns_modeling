@@ -1,8 +1,0 @@
-POST localhost:8080/menbers
-Content-Type: application/json
-
-{
-  "email": "test@email.com",
-  "nickname": "testNickName",
-  "birthDay": "2000-05-04"
-}
