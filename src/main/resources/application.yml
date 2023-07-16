@@ -12,3 +12,6 @@ spring:
     url: jdbc:mysql://${url}?rewriteBatchedStatements=true&characterEncoding=UTF-8&serverTimezone=Asia/Seoul
     password: ${password}
     driver-class-name: com.mysql.cj.jdbc.Driver
+springdoc:
+  swagger-ui:
+    path: /swagger
