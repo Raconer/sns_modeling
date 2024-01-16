@@ -18,7 +18,7 @@ import org.springframework.stereotype.Repository;
 @RequiredArgsConstructor
 public class PostRepository {
 
-  final static String TABLE = "Post";
+  final static String TABLE = "POST";
   final static private RowMapper<DailyPostCount> DAILY_POST_COUNT_MEPPER = (ResultSet resultSet, int rowNum) -> new DailyPostCount(
       resultSet.getLong("memberId"),
       resultSet.getObject("createdDate", LocalDate.class),

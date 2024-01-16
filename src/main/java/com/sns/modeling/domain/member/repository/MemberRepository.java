@@ -19,7 +19,7 @@ import org.springframework.stereotype.Repository;
 @RequiredArgsConstructor
 public class MemberRepository {
 
-  static final private String TABLE = "member";
+  static final private String TABLE = "Member";
   final private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
   final private RowMapper<Member> rowMapper = (ResultSet resultSet, int rownum) -> Member.builder()
       .id(resultSet.getLong("id"))

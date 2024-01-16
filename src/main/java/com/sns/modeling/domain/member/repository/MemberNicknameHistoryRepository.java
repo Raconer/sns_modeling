@@ -18,7 +18,7 @@ import org.springframework.stereotype.Repository;
 public class MemberNicknameHistoryRepository {
 
   final private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
-  static final private String TABLE = "membernicknamehistory";
+  static final private String TABLE = "MemberNicknameHistory";
   static final RowMapper<MemberNicknameHistory> rowMapper = (ResultSet resultSet, int rownum) -> MemberNicknameHistory.builder()
       .id(resultSet.getLong("id"))
       .memberId(resultSet.getLong("memberId"))

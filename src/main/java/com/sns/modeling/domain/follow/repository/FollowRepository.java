@@ -18,7 +18,7 @@ import org.springframework.stereotype.Repository;
 @RequiredArgsConstructor
 public class FollowRepository {
 
-  static final String TABLE = "follow";
+  static final String TABLE = "Follow";
   final private NamedParameterJdbcTemplate namedParameterJdbcTemplate;
   private static final RowMapper<Follow> ROW_MAPPER = (ResultSet resultSet, int rownum) -> Follow.builder()
       .id(resultSet.getLong("id"))
