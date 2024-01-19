@@ -11,12 +11,12 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class GetFollowMemberUsacase {
 
-  final private MemberReadService memberReadService;
-  final private FollowReadService followReadService;
+    final private MemberReadService memberReadService;
+    final private FollowReadService followReadService;
 
-  public List<MemberDto> execute(Long memberId){
-    var followings = this.followReadService.getFollowings(memberId);
-    var followingMemberIds = followings.stream().map(it -> it.getToMemberId()).toList();
-    return this.memberReadService.getMembers(followingMemberIds);
-  }
+    public List<MemberDto> execute(Long memberId) {
+        var followings = this.followReadService.getFollowings(memberId);
+        var followingMemberIds = followings.stream().map(it -> it.getToMemberId()).toList();
+        return this.memberReadService.getMembers(followingMemberIds);
+    }
 }
