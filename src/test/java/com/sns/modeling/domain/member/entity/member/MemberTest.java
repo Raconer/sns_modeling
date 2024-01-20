@@ -1,4 +1,4 @@
-package com.sns.modeling.domain.member.entity;
+package com.sns.modeling.domain.member.entity.member;
 
 import com.sns.modeling.util.MemberFixtureFactory;
 import org.junit.jupiter.api.Assertions;
