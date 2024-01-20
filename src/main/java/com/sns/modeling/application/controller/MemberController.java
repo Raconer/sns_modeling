@@ -17,18 +17,19 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/menbers")
+@RequestMapping("/members")
 public class MemberController {
 
     final private MemberWriteService memberWriteService;
     final private MemberReadService memberReadService;
 
+    // Create
     @PostMapping
     public MemberDto create(@RequestBody RegisterMemberCommand command){
         var member = this.memberWriteService.create(command);
         return this.memberReadService.toDto(member);
     }
-
+    // Read
     @GetMapping("/{id}")
     public MemberDto getMember(@PathVariable Long id){
         return this.memberReadService.getMember(id);
@@ -38,7 +39,7 @@ public class MemberController {
     public List<MemberNicknameHistoryDto> getNicknameHistories(@PathVariable Long memberId){
         return this.memberReadService.getNicknameHistories(memberId);
     }
-
+    // Update
     @PutMapping("/{id}/name")
     public MemberDto changeNickname(@PathVariable Long id, @RequestBody String nickname ){
         this.memberWriteService.changeNickname(id, nickname);

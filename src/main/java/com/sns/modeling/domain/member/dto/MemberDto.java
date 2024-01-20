@@ -7,4 +7,5 @@ public record MemberDto(
     String email,
     String nickname,
     LocalDate birthday
-){ }
+){
+}

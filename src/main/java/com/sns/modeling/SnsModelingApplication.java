@@ -5,9 +5,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
 public class SnsModelingApplication {
-
-	public static void main(String[] args) {
-		SpringApplication.run(SnsModelingApplication.class, args);
-	}
-
+    public static void main(String[] args) {
+        SpringApplication.run(SnsModelingApplication.class, args);
+    }
 }

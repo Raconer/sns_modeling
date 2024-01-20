@@ -10,13 +10,13 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class PostWriteService {
 
-  final private PostRepository postRepository;
+    final private PostRepository postRepository;
 
-  public Long create(PostCommand command) {
-    var post = Post.builder()
-        .memberId(command.memberId())
-        .contents(command.contents())
-        .build();
-    return postRepository.save(post).getId();
-  }
+    public Long create(PostCommand command) {
+        var post = Post.builder()
+                .memberId(command.memberId())
+                .contents(command.contents())
+                .build();
+        return postRepository.save(post).getId();
+    }
 }
