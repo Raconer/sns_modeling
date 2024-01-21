@@ -71,13 +71,14 @@ public class PostRepository {
     }
 
     public List<DailyPostCount> groupByCreatedDate(DailyPostCountRequest request) {
-        var sql = String.format("SELECT createdDate, " +
-                                        "memberId, " +
-                                        "count(id) AS count " +
-                                        "FROM %s " +
-                                        "WHERE memberId = :memberId " +
-                                        "AND createdDate between :firstDate AND :lastDate " +
-                                        "GROUP BY memberId, createdDate", this.TABLE);
+        var sql = String.format("""
+                                SELECT createdDate,
+                                        memberId,
+                                        count(id) AS count
+                                FROM %s
+                                WHERE memberId = :memberId
+                                AND createdDate between :firstDate AND :lastDate
+                                GROUP BY memberId, createdDate""", this.TABLE);
 
         var params = new BeanPropertySqlParameterSource(request);
         return namedParameterJdbcTemplate.query(sql, params, DAILY_POST_COUNT_MEPPER);

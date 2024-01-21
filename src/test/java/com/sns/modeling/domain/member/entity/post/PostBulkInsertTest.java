@@ -20,18 +20,18 @@ public class PostBulkInsertTest {
     @Test
     public void bulkInsert() {
         var easyRandom = PostFixtureFactory.get(3L,
-                                               LocalDate.of(2022, 1, 1),
+                                               LocalDate.of(1970, 1, 1),
                                                LocalDate.of(2022, 2, 1));
 
-
+        // 10000건
         // 객체 생성 시간(forEach() Insert)    1.7237716
         // 객체 생성 시간(stream().parallel().forEach() Insert)    1.7998228
         // 객체 생성 시간(parallelStream().forEach() Insert)     1.6954892
         // 객체 생성 시간(Bulk Insert) 	: 1.4947793
-        var tenThousand  = 1000;
+        var tenThousand  = 10000;
         var stopWatch = new StopWatch();
         stopWatch.start();
-        var posts = IntStream.range(0, tenThousand * 10)
+        var posts = IntStream.range(0, tenThousand * 200)
                 .parallel()
                 .mapToObj(i -> easyRandom.nextObject(Post.class))
                 .toList();
