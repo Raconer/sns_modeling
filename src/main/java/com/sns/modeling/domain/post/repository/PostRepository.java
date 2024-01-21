@@ -38,12 +38,15 @@ public class PostRepository {
     }
 
     private Post insert(Post post) {
-        SimpleJdbcInsert jdbcInsert = new SimpleJdbcInsert(
-                namedParameterJdbcTemplate.getJdbcTemplate()).withTableName(this.TABLE)
+        SimpleJdbcInsert jdbcInsert = new SimpleJdbcInsert(namedParameterJdbcTemplate.getJdbcTemplate())
+                .withTableName(this.TABLE)
                 .usingGeneratedKeyColumns("id");
 
         SqlParameterSource params = new BeanPropertySqlParameterSource(post);
-        var id = jdbcInsert.executeAndReturnKey(params).longValue();
+
+        var id = jdbcInsert
+                .executeAndReturnKey(params)
+                .longValue();
 
         return Post.builder()
                 .id(id)
@@ -54,14 +57,28 @@ public class PostRepository {
                 .build();
     }
 
+    public void bulkInsert(List<Post> posts) {
+        var sql = String.format(
+                "INSERT INTO `%s` (memberId, contents, createdDate, createdAt)" +
+                        "VALUES (:memberId, :contents, :createdDate, :createdAt)",
+                this.TABLE
+        );
+
+        SqlParameterSource[] params = posts.stream().map(BeanPropertySqlParameterSource::new).toArray(SqlParameterSource[]::new);
+
+        this.namedParameterJdbcTemplate.batchUpdate(sql, params);
+
+    }
+
     public List<DailyPostCount> groupByCreatedDate(DailyPostCountRequest request) {
-        var sql = String.format("SELECT createdDate, " +
-                                        "memberId, " +
-                                        "count(id) AS count " +
-                                "FROM %s " +
-                                "WHERE memberId = :memberId " +
-                                "AND createdDate between :firstDate AND :lastDate " +
-                                "GROUP BY memberId, createdDate", this.TABLE);
+        var sql = String.format("""
+                                SELECT createdDate,
+                                        memberId,
+                                        count(id) AS count
+                                FROM %s
+                                WHERE memberId = :memberId
+                                AND createdDate between :firstDate AND :lastDate
+                                GROUP BY memberId, createdDate""", this.TABLE);
 
         var params = new BeanPropertySqlParameterSource(request);
         return namedParameterJdbcTemplate.query(sql, params, DAILY_POST_COUNT_MEPPER);
