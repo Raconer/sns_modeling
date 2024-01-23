@@ -1,16 +1,23 @@
 package com.sns.modeling.domain.post.repository;
 
+import com.sns.modeling.domain.PageHelper;
 import com.sns.modeling.domain.post.dto.DailyPostCount;
 import com.sns.modeling.domain.post.dto.DailyPostCountRequest;
 import com.sns.modeling.domain.post.entity.Post;
 
 import java.sql.ResultSet;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.BeanPropertySqlParameterSource;
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
@@ -21,7 +28,15 @@ import org.springframework.stereotype.Repository;
 public class PostRepository {
 
     final private String TABLE = "POST";
-    final static private RowMapper<DailyPostCount> DAILY_POST_COUNT_MEPPER = (ResultSet resultSet, int rowNum) -> new DailyPostCount(
+    final static private RowMapper<Post> ROW_MAPPER = (ResultSet resultSet, int rowNum) -> Post.builder()
+            .id(resultSet.getLong("id"))
+            .memberId(resultSet.getLong("memberId"))
+            .contents(resultSet.getString("contents"))
+            .createdDate(resultSet.getObject("createdDate", LocalDate.class))
+            .createdAt(resultSet.getObject("createdAt", LocalDateTime.class))
+            .build();
+
+    final static private RowMapper<DailyPostCount> DAILY_POST_COUNT_MAPPER = (ResultSet resultSet, int rowNum) -> new DailyPostCount(
             resultSet.getLong("memberId"),
             resultSet.getObject("createdDate", LocalDate.class),
             resultSet.getLong("count")
@@ -58,13 +73,14 @@ public class PostRepository {
     }
 
     public void bulkInsert(List<Post> posts) {
-        var sql = String.format(
-                "INSERT INTO `%s` (memberId, contents, createdDate, createdAt)" +
-                        "VALUES (:memberId, :contents, :createdDate, :createdAt)",
-                this.TABLE
-        );
+        var sql = String.format("""
+                                        INSERT INTO `%s` (memberId, contents, createdDate, createdAt)
+                                        VALUES (:memberId, :contents, :createdDate, :createdAt)""",
+                                this.TABLE);
 
-        SqlParameterSource[] params = posts.stream().map(BeanPropertySqlParameterSource::new).toArray(SqlParameterSource[]::new);
+        SqlParameterSource[] params = posts.stream()
+                .map(BeanPropertySqlParameterSource::new)
+                .toArray(SqlParameterSource[]::new);
 
         this.namedParameterJdbcTemplate.batchUpdate(sql, params);
 
@@ -72,16 +88,42 @@ public class PostRepository {
 
     public List<DailyPostCount> groupByCreatedDate(DailyPostCountRequest request) {
         var sql = String.format("""
-                                SELECT createdDate,
-                                        memberId,
-                                        count(id) AS count
-                                FROM %s
-                                WHERE memberId = :memberId
-                                AND createdDate between :firstDate AND :lastDate
-                                GROUP BY memberId, createdDate""", this.TABLE);
+                                        SELECT createdDate,
+                                                memberId,
+                                                count(id) AS count
+                                        FROM %s
+                                        WHERE memberId = :memberId
+                                        AND createdDate between :firstDate AND :lastDate
+                                        GROUP BY memberId, createdDate""", this.TABLE);
 
         var params = new BeanPropertySqlParameterSource(request);
-        return namedParameterJdbcTemplate.query(sql, params, DAILY_POST_COUNT_MEPPER);
+        return namedParameterJdbcTemplate.query(sql, params, DAILY_POST_COUNT_MAPPER);
+    }
 
+    public Page<Post> findAllByMemberId(Long memberId, Pageable pageable) {
+        var params = new MapSqlParameterSource().addValue("memberId", memberId)
+                .addValue("size", pageable.getPageSize())
+                .addValue("offset", pageable.getOffset());
+        var sql = String.format(""" 
+                                        SELECT  *
+                                        FROM    %s
+                                        WHERE   memberId = :memberId
+                                        ORDER BY %s
+                                        LIMIT   :size
+                                        OFFSET  :offset
+                                        """, this.TABLE, PageHelper.orderBy(pageable.getSort()));
+
+        var posts = this.namedParameterJdbcTemplate.query(sql, params, ROW_MAPPER);
+
+        return new PageImpl<>(posts, pageable, this.getCount(memberId));
+    }
+
+    private Long getCount(Long memberId) {
+        var params = new MapSqlParameterSource().addValue("memberId", memberId);
+        var sql = String.format("""
+                                        SELECT COUNT(id)
+                                        FROM %s
+                                        WHERE memberId = :memberId""", this.TABLE);
+        return this.namedParameterJdbcTemplate.queryForObject(sql, params, Long.class);
     }
 }
