@@ -20,6 +20,8 @@ import org.springframework.stereotype.Service;
 public class PostReadService {
     final private PostRepository postRepository;
 
+
+
     public List<DailyPostCount> getDailyPostCount(DailyPostCountRequest request) {
         return this.postRepository.groupByCreatedDate(request);
     }
@@ -38,6 +40,10 @@ public class PostReadService {
         var posts = this.findAllBy(memberIds, cursorRequest);
         var nextKey = getNextKey(posts);
         return new PageCursor<>(cursorRequest.next(nextKey), posts);
+    }
+
+    public List<Post> getPosts(List<Long> ids){
+        return this.postRepository.findAllByInId(ids);
     }
 
     private List<Post> findAllBy(Long memberId, CursorRequest cursorRequest) {

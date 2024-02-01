@@ -1,5 +1,6 @@
 package com.sns.modeling.application.controller;
 
+import com.sns.modeling.application.usacase.CreatePostUseCase;
 import com.sns.modeling.application.usacase.GetTimelinePostUseCase;
 import com.sns.modeling.domain.post.dto.DailyPostCount;
 import com.sns.modeling.domain.post.dto.DailyPostCountRequest;
@@ -25,16 +26,24 @@ public class PostController {
     final private PostWriteService postWriteService;
     final private PostReadService postReadService;
     final private GetTimelinePostUseCase getTimelinePostUseCase;
-
+    final private CreatePostUseCase createPostUseCase;
+    // CREATE
     @PostMapping
     public Long create(PostCommand command) {
         return this.postWriteService.create(command);
     }
 
+    @PostMapping("/timeline")
+    public Long createWithTimeline(PostCommand command) {
+        return this.createPostUseCase.execute(command);
+    }
+
+    // READ
     @GetMapping("/daily-post-count")
     public List<DailyPostCount> getDailyPostCounts(@ModelAttribute DailyPostCountRequest request) {
         return this.postReadService.getDailyPostCount(request);
     }
+
 
     // 오프셋 방식(LIMIT, OFFSET 을 사용하여 몇번째 부터 몇개씩 읽어 온다.)
     // 장점:
@@ -85,5 +94,13 @@ public class PostController {
             CursorRequest cursorRequest
     ) {
         return this.getTimelinePostUseCase.execute(memberId, cursorRequest);
+    }
+
+    @GetMapping("/member/{memberId}/tiemline/v2")
+    public PageCursor<Post> getTimeLineV2(
+            @PathVariable("memberId") Long memberId,
+            CursorRequest cursorRequest
+    ) {
+        return this.getTimelinePostUseCase.executeByTimeline(memberId, cursorRequest);
     }
 }

@@ -26,7 +26,7 @@ public class FollowRepository {
       .toMemberId(resultSet.getLong("toMemberId"))
       .createdAt(resultSet.getObject("createdAt", LocalDateTime.class))
       .build();
-
+  // CREATE
   public Follow save(Follow follow){
     if(follow.getId() == null){
       return this.insert(follow);
@@ -34,6 +34,7 @@ public class FollowRepository {
 
     throw new UnsupportedOperationException("Follow는 갱신을 지원하지 않습니다.");
   }
+
 
   private Follow insert(Follow follow) {
     SimpleJdbcInsert jdbcInsert = new SimpleJdbcInsert(namedParameterJdbcTemplate.getJdbcTemplate())
@@ -51,9 +52,16 @@ public class FollowRepository {
         .build();
   }
 
-  public List<Follow> finaAllByfromMemberId(Long fromMemberId){
+  // READ
+  public List<Follow> findAllByFromMemberId(Long fromMemberId){
     var sql = String.format("SELECT * FROM %s WHERE fromMemberId = :fromMemberId", TABLE);
     var params = new MapSqlParameterSource().addValue("fromMemberId", fromMemberId );
+    return namedParameterJdbcTemplate.query(sql, params, ROW_MAPPER);
+  }
+
+  public List<Follow> findAllByToMemberId(Long toMemberId){
+    var sql = String.format("SELECT * FROM %s WHERE toMemberId = :toMemberId", TABLE);
+    var params = new MapSqlParameterSource().addValue("toMemberId", toMemberId );
     return namedParameterJdbcTemplate.query(sql, params, ROW_MAPPER);
   }
 }
