@@ -50,7 +50,7 @@ public class PostRepository {
 
         throw new UnsupportedOperationException("POST는 갱신을 지원하지 않습니다.");
     }
-
+    // CREATE
     private Post insert(Post post) {
         SimpleJdbcInsert jdbcInsert = new SimpleJdbcInsert(namedParameterJdbcTemplate.getJdbcTemplate())
                 .withTableName(this.TABLE)
@@ -85,6 +85,7 @@ public class PostRepository {
 
     }
 
+    // READ
     public List<DailyPostCount> groupByCreatedDate(DailyPostCountRequest request) {
         var sql = String.format("""
                                         SELECT createdDate,
@@ -138,6 +139,38 @@ public class PostRepository {
         return this.namedParameterJdbcTemplate.query(sql, params, ROW_MAPPER);
     }
 
+    public List<Post> findAllByInMemberIdAndOrderByIdDesc(List<Long> memberIds, int size) {
+
+        if(memberIds.isEmpty()){
+            return List.of();
+        }
+
+        var params = new MapSqlParameterSource().addValue("memberIds", memberIds)
+                .addValue("size", size);
+        var sql = String.format("""
+                                        SELECT *
+                                        FROM %s
+                                        WHERE memberId in (:memberIds)
+                                        ORDER BY id desc
+                                        LIMIT :size""", this.TABLE);
+        return this.namedParameterJdbcTemplate.query(sql, params, ROW_MAPPER);
+    }
+
+    public List<Post> findAllByInId(List<Long> ids){
+        if(ids.isEmpty()) return List.of();
+
+        var params = new MapSqlParameterSource()
+                .addValue("ids", ids);
+
+        var sql = String.format("""
+                                        SELECT *
+                                        FROM %s
+                                        WHERE id in (:ids)
+                                        ORDER BY id desc
+                                        """, this.TABLE);
+        return this.namedParameterJdbcTemplate.query(sql, params, ROW_MAPPER);
+    }
+
     public List<Post> findAllByLessThanIdAndMemberIdAndOrderByIdDesc(Long id, Long memberId, int size) {
         var params = new MapSqlParameterSource()
                 .addValue("id", id)
@@ -147,6 +180,24 @@ public class PostRepository {
                                         SELECT *
                                         FROM %s
                                         WHERE memberId = :memberId and id < :id
+                                        ORDER BY id desc
+                                        LIMIT :size""", this.TABLE);
+        return this.namedParameterJdbcTemplate.query(sql, params, ROW_MAPPER);
+    }
+
+    public List<Post> findAllByLessThanIdAndInMemberIdAndOrderByIdDesc(Long id, List<Long> memberIds, int size) {
+        if(memberIds.isEmpty()){
+            return List.of();
+        }
+
+        var params = new MapSqlParameterSource()
+                .addValue("id", id)
+                .addValue("memberIds", memberIds)
+                .addValue("size", size);
+        var sql = String.format("""
+                                        SELECT *
+                                        FROM %s
+                                        WHERE memberId in (:memberIds) and id < :id
                                         ORDER BY id desc
                                         LIMIT :size""", this.TABLE);
         return this.namedParameterJdbcTemplate.query(sql, params, ROW_MAPPER);
