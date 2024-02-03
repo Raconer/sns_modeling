@@ -27,6 +27,11 @@
 
 ## 1. Index 
 
+1. Not Index : 2s
+2. 중복이 많은 Index(memberId) : 14s
+3. 중복이 적은 Index(createdDate) : 0.199s
+4. 2번 3번 합한 Index : 0.011s
+
 ### 0. 인덱스를 다룰 때 주의해야 할점
 
 1. Cardinality가 높은 컬럼에 사용
@@ -291,6 +296,45 @@ WHERE age = '1' // 2. age는 int 타입이므로 Index 비교가 되지 않는�
 #### 지속성(Durability)
   * 성공한 트랜잭션은 영원히 반영 되어야 한다.
 
+### 트랜잭션 설정 방법
+
+1. @Transactional
+   * import org.springframework.transaction.support.TransactionTemplate;
+   * 위에 꺼를 사용해야 좀더 다양한 설정을 할수있다.
+   * 주의해야 할점
+     * Proxy방식으로 동작 하기 때문에 Class를 상속 받는 특정 개체가 만들어진다.
+       * 그래서 inner 함수를 호출하게 될경우 트랜잭션이 제대로 실행되지 않는다.
+```kotlin
+    // Transactional이 제대로 동작하지 않는 경우
+    // Proxy 패턴이므로 제대로 동작하지 않는다.
+    public Member create(Member member) {
+        return getMember(member);
+    }
+
+    @Transactional
+    private Member getMember(Member member) {
+        val saveMember = this.repository.save(member);
+        // 트션 랜잭션 테스트
+         var zero = 0 / 0;
+        this.saveMemberNicknameHistory(saveMember);
+        return savedMember;
+    }
+```
+2. TransactionTemplate 
+   * execute를 하여 트랜잭션 처리를 하지만 잘 사용하지 않는다.
+
+3. MySql 에서 Query로 짤때
+```mysql
+-- Query 내용 작성 부분이 트랜잭션 범위가 된다.
+START TRANSACTION;
+-- Query 내용 작성
+COMMIT;
+```
+
+
+### 주의 할점 
+> 데이터 가 많을경우 트랜잭션을 설정 하면 그만큼 트랜잭션길이가 길어지므로 성능상 이슈가 생긴다.
+> 그래서 트랜잭션의 범위는 최대한 짧게 설정하는것이 좋다.
 
 
 
