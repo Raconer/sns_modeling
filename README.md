@@ -27,6 +27,11 @@
 
 ## 1. Index 
 
+1. Not Index : 2s
+2. 중복이 많은 Index(memberId) : 14s
+3. 중복이 적은 Index(createdDate) : 0.199s
+4. 2번 3번 합한 Index : 0.011s
+
 ### 0. 인덱스를 다룰 때 주의해야 할점
 
 1. Cardinality가 높은 컬럼에 사용
@@ -235,3 +240,150 @@ WHERE age = '1' // 2. age는 int 타입이므로 Index 비교가 되지 않는�
 
 > CAP 이론은 세 가지 특성 중에서 두 가지만을 선택할 수 있다는 개념으로, 현실적인 분산 시스템에서는 이 세 가지 특성을 완벽하게 동시에 만족시키기 어렵습니다. <br>
 > 따라서 시스템 설계 시에 어떤 특성을 중요시하느냐에 따라 CAP 이론을 기반으로 선택을 고려해야 합니다.
+
+
+## 3. 트랜잭션
+
+> 트랜잭션 설정을 하지 않으면 SQL문 하나에 트랜잭션이 설정된다.
+
+### 홍길동 - 900원 -> 김국밥
+1. READ(홍길동 잔액)
+   * | 이름  | 잔액   |
+     |-----|------|
+     | 홍길동 | 1000 |
+     | 김천사 | 500  |
+2. UPDATE(김국밥 잔액) = 김국밥 잔액 + 900
+   * | 이름  | 잔액   |
+     |-----|------|
+     | 홍길동 | 1000 |
+     | 김천사 | 1400 |
+3. UPDATE(홍길동 잔액) = 홍길동 잔액 - 900
+   * | 이름  | 잔액   |
+     |-----|------|
+     | 홍길동 | 100  |
+     | 김천사 | 1400 |
+
+#### 만약 3번이 실패 한다면?
+> 트랜잭션이 없다면 데이터 정합성이 깨졌다고 표현이 된다.
+> 그래서 **_여러 SQL문을 하나의 오퍼레이션으로 묶을 수 있어야 한다._**
+
+#### 만약 2번과 3번이 바껴서 실행되고 이순간 김국밥이 1400원을 출금이 되어 버린다면?
+> 처리중인 데이터를 다른 곳에서 조회하게 되면 문제가 발생되므로 트랜잭션 격리레벨을 설정한다.
+
+### ACID
+
+#### 원자성(Atomicity) 
+* 특징
+  * 트랜잭션은 실행되면 중단 되지 않는다.
+  * ALL or Nothing -> 성공 또는 실패 만 있다.
+    * MVCC 기능이 지원한다.
+* 동작
+  * 트랜잭션 시작 (2번 실행)
+  * 원본 데이터는 Under Log에 저장되어 있다.
+  * 트랜잭션 실패시 Under Log로 Rollback이 된다.
+    * MVCC는 버전 관리 개념이다.
+  * 트랜잭션 성공시
+    * 변경된 데이터는 Commit이 된다.
+    * 원본데이터가 바로 삭제 되지 않는다.
+
+#### 일관성(Consistency)
+  * 트랜잭션이 종료 되어 ㅆ을때 데이터 무결성이 보장된다.
+    * 제약조건을 통해 보장이된다.
+      * ex) 유니크 제약, 외래키 제약
+#### 독립성(Isolation)
+  * 다른 트랜잭션이 끼어들지 못한다.
+  * DB 성능 관련으로 가장 유연성있는 제약 조건이다.
+#### 지속성(Durability)
+  * 성공한 트랜잭션은 영원히 반영 되어야 한다.
+
+### 트랜잭션 설정 방법
+
+1. @Transactional
+   * import org.springframework.transaction.support.TransactionTemplate;
+   * 위에 꺼를 사용해야 좀더 다양한 설정을 할수있다.
+   * 주의해야 할점
+     * Proxy방식으로 동작 하기 때문에 Class를 상속 받는 특정 개체가 만들어진다.
+       * 그래서 inner 함수를 호출하게 될경우 트랜잭션이 제대로 실행되지 않는다.
+```kotlin
+    // Transactional이 제대로 동작하지 않는 경우
+    // Proxy 패턴이므로 제대로 동작하지 않는다.
+    public Member create(Member member) {
+        return getMember(member);
+    }
+
+    @Transactional
+    private Member getMember(Member member) {
+        val saveMember = this.repository.save(member);
+        // 트션 랜잭션 테스트
+         var zero = 0 / 0;
+        this.saveMemberNicknameHistory(saveMember);
+        return savedMember;
+    }
+```
+2. TransactionTemplate 
+   * execute를 하여 트랜잭션 처리를 하지만 잘 사용하지 않는다.
+
+3. MySql 에서 Query로 짤때
+```mysql
+-- Query 내용 작성 부분이 트랜잭션 범위가 된다.
+START TRANSACTION;
+-- Query 내용 작성
+COMMIT;
+```
+
+### 주의 할점 
+> 데이터 가 많을경우 트랜잭션을 설정 하면 그만큼 트랜잭션길이가 길어지므로 성능상 이슈가 생긴다.
+> 그래서 트랜잭션의 범위는 최대한 짧게 설정하는것이 좋다.
+
+### ACID _ 독립성(Isolation)
+
+> 트랜잭션은 독립적으로 실행된다.
+
+* 예제)
+
+| 이름  | 잔액   |
+|-----|------|
+| 홍길동 | 1000 |
+| 김국밥 | 500  | 
+
+
+* 격리 레벨
+  * 3가지 현상을 얼마나 방지 하느냐에 따라 나뉜다.
+    * DIRTY_READ
+      * **COMMIT 되지 않은 정보를 읽었다.**
+      * 예) 트랜잭션1_(홍길동이 김국밥에게 900원 송금) / 트랜잭션2_(김국밥이 1400원 인출)
+        1. 트랜잭션1 송금(UPDATE) _ COMMIT 안됨 
+        2. 트랜잭션2 인출하기 위해 READ(READ)
+        3. 트랜잭션1 실패(ROLLBACK)
+        4. 트랜잭션1이 실패 하였으나 트랜잭션2는 송금된 금액 1400원을 읽었다.
+    * NON_REPEATABLE_READ
+      * **하나의 트랜잭션에서 같은 데이터를 읽었지만 다른 데이터가 출력이 된다.**
+      * 예) 트랜잭션1_(홍길동이 잔고를 3번 읽는다) / 트랜잭션2_(김국밥이 홍길동이 2번 READ이후 200원 송금한게 COMMIT된다.)
+        * 트랜잰션1 READ -> 1000원
+        * 트랜잭션2 홍길동 에게 200원 송금(미 커밋)
+        * 트랜잭션1 READ -> 1000원
+        * 트랜잭션2 200원 송금 COMMIT
+        * 트랜잭션1 READ -> 1200원
+    * PHANTOM_READ
+      * 없던 데이터가 생겼다(NON_REPEATABLE_READ 와 비슷하나 변경된 ROW데이터가 아니라 ROW가 추가되어 READ된다.)
+      * 같은 조건으로 다른 데이터 ROW의 갯수가 출력/제거 된다.
+      * 예) 트랜잭션1_(1000원 이상인 데이터를 2번 읽는다) / 트랜잭션2_(트랜잭션1이 1번 읽고 난뒤 김국밥에게 +700원 UPDATE한다.)
+        * 트랜잭션1 "WHERE 잔액 >= 1000 READ" -> (홍길동) 출력
+        * 트랜잭션2 김국밥에게 700원 송금(COMMIT 완료)
+        * 트랜잭션1 "WHERE 잔액 >= 1000 READ" -> (홍길동, 김국밥) 출력
+* 종류(격리레벨)
+  1. READ_UNCOMMITTED
+  2. READ_COMMITTED
+    * DIRTY_READ X
+  3. REPEATABLE_READ  (데드락 이슈가 빈번히 일어난다.)
+    * DIRTY_READ X
+    * NON_REPEATABLE_READ X
+  4. SERIALIZABLE_READ
+    * DIRTY_READ X
+    * NON_REPEATABLE_READ X
+    * PHANTOM_READ X
+
+
+
+
+
