@@ -9,6 +9,7 @@ import java.sql.ResultSet;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -22,6 +23,8 @@ import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.stereotype.Repository;
 
+import javax.swing.text.html.Option;
+
 @Repository
 @RequiredArgsConstructor
 public class PostRepository {
@@ -33,6 +36,7 @@ public class PostRepository {
             .contents(resultSet.getString("contents"))
             .createdDate(resultSet.getObject("createdDate", LocalDate.class))
             .createdAt(resultSet.getObject("createdAt", LocalDateTime.class))
+            .likeCount(resultSet.getLong("likeCount"))
             .build();
 
     final static private RowMapper<DailyPostCount> DAILY_POST_COUNT_MAPPER = (ResultSet resultSet, int rowNum) -> new DailyPostCount(
@@ -48,8 +52,9 @@ public class PostRepository {
             return this.insert(post);
         }
 
-        throw new UnsupportedOperationException("POST는 갱신을 지원하지 않습니다.");
+        return this.update(post);
     }
+
     // CREATE
     private Post insert(Post post) {
         SimpleJdbcInsert jdbcInsert = new SimpleJdbcInsert(namedParameterJdbcTemplate.getJdbcTemplate())
@@ -141,7 +146,7 @@ public class PostRepository {
 
     public List<Post> findAllByInMemberIdAndOrderByIdDesc(List<Long> memberIds, int size) {
 
-        if(memberIds.isEmpty()){
+        if (memberIds.isEmpty()) {
             return List.of();
         }
 
@@ -156,8 +161,8 @@ public class PostRepository {
         return this.namedParameterJdbcTemplate.query(sql, params, ROW_MAPPER);
     }
 
-    public List<Post> findAllByInId(List<Long> ids){
-        if(ids.isEmpty()) return List.of();
+    public List<Post> findAllByInId(List<Long> ids) {
+        if (ids.isEmpty()) return List.of();
 
         var params = new MapSqlParameterSource()
                 .addValue("ids", ids);
@@ -186,7 +191,7 @@ public class PostRepository {
     }
 
     public List<Post> findAllByLessThanIdAndInMemberIdAndOrderByIdDesc(Long id, List<Long> memberIds, int size) {
-        if(memberIds.isEmpty()){
+        if (memberIds.isEmpty()) {
             return List.of();
         }
 
@@ -201,5 +206,34 @@ public class PostRepository {
                                         ORDER BY id desc
                                         LIMIT :size""", this.TABLE);
         return this.namedParameterJdbcTemplate.query(sql, params, ROW_MAPPER);
+    }
+
+    public Optional<Post> findById(Long postId, Boolean requiredLock) {
+        var sql = String.format("""
+                                        SELECT *
+                                        FROM %s
+                                        WHERE id = :postId
+                                        """, this.TABLE);
+        if(requiredLock){
+            sql += "FOR UPDATE";
+        }
+        var params = new MapSqlParameterSource().addValue("postId", postId);
+        var nullablePost = this.namedParameterJdbcTemplate.queryForObject(sql, params, ROW_MAPPER);
+        return Optional.ofNullable(nullablePost);
+    }
+
+    public Post update(Post post) {
+        var sql = String.format("""
+                                     UPDATE %s
+                                     SET memberId = :memberId,
+                                         contents = :contents,
+                                         createdDate = :createdDate,
+                                        likeCount = :likeCount,
+                                        createdAt = :createdAt
+                                        WHERE id  = :id
+                                         """, this.TABLE);
+        SqlParameterSource params = new BeanPropertySqlParameterSource(post);
+        this.namedParameterJdbcTemplate.update(sql, params);
+        return post;
     }
 }
