@@ -37,6 +37,7 @@ public class PostRepository {
             .createdDate(resultSet.getObject("createdDate", LocalDate.class))
             .createdAt(resultSet.getObject("createdAt", LocalDateTime.class))
             .likeCount(resultSet.getLong("likeCount"))
+            .version(resultSet.getLong("version"))
             .build();
 
     final static private RowMapper<DailyPostCount> DAILY_POST_COUNT_MAPPER = (ResultSet resultSet, int rowNum) -> new DailyPostCount(
@@ -229,11 +230,15 @@ public class PostRepository {
                                          contents = :contents,
                                          createdDate = :createdDate,
                                         likeCount = :likeCount,
-                                        createdAt = :createdAt
-                                        WHERE id  = :id
+                                        createdAt = :createdAt,
+                                        version = :version + 1
+                                        WHERE id  = :id and version = :version
                                          """, this.TABLE);
         SqlParameterSource params = new BeanPropertySqlParameterSource(post);
-        this.namedParameterJdbcTemplate.update(sql, params);
+        var updatedCount = this.namedParameterJdbcTemplate.update(sql, params);
+        if(updatedCount == 0){
+            throw new RuntimeException("갱신 실패");
+        }
         return post;
     }
 }
