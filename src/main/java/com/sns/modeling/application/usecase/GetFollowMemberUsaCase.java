@@ -1,4 +1,4 @@
-package com.sns.modeling.application.usacase;
+package com.sns.modeling.application.usecase;
 
 import com.sns.modeling.domain.follow.service.FollowReadService;
 import com.sns.modeling.domain.member.dto.MemberDto;

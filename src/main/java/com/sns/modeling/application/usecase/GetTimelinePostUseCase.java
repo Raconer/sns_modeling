@@ -1,19 +1,15 @@
-package com.sns.modeling.application.usacase;
+package com.sns.modeling.application.usecase;
 
 import com.sns.modeling.domain.follow.entity.Follow;
 import com.sns.modeling.domain.follow.service.FollowReadService;
 import com.sns.modeling.domain.post.entity.Post;
 import com.sns.modeling.domain.post.entity.Timeline;
-import com.sns.modeling.domain.post.repository.PostRepository;
 import com.sns.modeling.domain.post.service.PostReadService;
 import com.sns.modeling.domain.post.service.TimelineReadService;
 import com.sns.modeling.util.CursorRequest;
 import com.sns.modeling.util.PageCursor;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
-
-import java.util.List;
 
 @RequiredArgsConstructor
 @Service
