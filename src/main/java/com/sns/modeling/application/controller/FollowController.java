@@ -1,7 +1,7 @@
 package com.sns.modeling.application.controller;
 
-import com.sns.modeling.application.usacase.CreateFollowMemberUseCase;
-import com.sns.modeling.application.usacase.GetFollowMemberUsaCase;
+import com.sns.modeling.application.usecase.CreateFollowMemberUseCase;
+import com.sns.modeling.application.usecase.GetFollowMemberUsaCase;
 import com.sns.modeling.domain.member.dto.MemberDto;
 import java.util.List;
 
