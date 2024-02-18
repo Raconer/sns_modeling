@@ -1,5 +1,14 @@
 # SNS 서비스
 
+## 추가 적용 기술(추후)
+* Repository Layer를 JPA로 리팩토링
+* 팔로워가 100만명인 유저의 게시물 작성 성능 테스트
+  * 비동기 큐를 통해 개선
+  * Mixed Push/ Pull Model
+* 로그인/팔로우 승인, 취소/ 댓글 구현
+* MySQK Master/Salve
+* 파티셔닝
+
 # API
 
 * 팔로우 정보
